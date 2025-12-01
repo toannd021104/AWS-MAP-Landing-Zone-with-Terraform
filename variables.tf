@@ -148,3 +148,105 @@ variable "accounts" {
   }))
   default = {}
 }
+
+# -----------------------------------------------------------------------------
+# Compute Configuration - vCenter Migration (AWS MGN)
+# -----------------------------------------------------------------------------
+variable "enable_compute" {
+  description = "Enable compute module for migrated workloads"
+  type        = bool
+  default     = false
+}
+
+variable "web_server_count" {
+  description = "Number of web servers to migrate"
+  type        = number
+  default     = 2
+}
+
+variable "app_server_count" {
+  description = "Number of application servers to migrate"
+  type        = number
+  default     = 2
+}
+
+variable "create_alb" {
+  description = "Create Application Load Balancer for web tier"
+  type        = bool
+  default     = true
+}
+
+variable "vcenter_source_vms" {
+  description = "List of source VMs from vCenter for migration tracking"
+  type = list(object({
+    name       = string
+    datacenter = string
+    cluster    = string
+    ip_address = string
+  }))
+  default = [
+    {
+      name       = "PROD-WEB-01"
+      datacenter = "DC-HCM"
+      cluster    = "Cluster-Prod"
+      ip_address = "192.168.1.10"
+    },
+    {
+      name       = "PROD-WEB-02"
+      datacenter = "DC-HCM"
+      cluster    = "Cluster-Prod"
+      ip_address = "192.168.1.11"
+    },
+    {
+      name       = "PROD-APP-01"
+      datacenter = "DC-HCM"
+      cluster    = "Cluster-Prod"
+      ip_address = "192.168.1.20"
+    },
+    {
+      name       = "PROD-APP-02"
+      datacenter = "DC-HCM"
+      cluster    = "Cluster-Prod"
+      ip_address = "192.168.1.21"
+    }
+  ]
+}
+
+# -----------------------------------------------------------------------------
+# AWS MGN Configuration - Application Migration Service
+# -----------------------------------------------------------------------------
+variable "enable_mgn" {
+  description = "Enable AWS Application Migration Service (MGN)"
+  type        = bool
+  default     = false
+}
+
+variable "vcenter_cidr_blocks" {
+  description = "CIDR blocks of source vCenter network for MGN replication"
+  type        = list(string)
+  default     = ["192.168.0.0/16", "10.0.0.0/8", "172.16.0.0/12"]
+}
+
+variable "mgn_replication_instance_type" {
+  description = "Instance type for MGN replication servers"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "mgn_bandwidth_throttling" {
+  description = "Bandwidth throttling for MGN replication in Mbps (0 = unlimited)"
+  type        = number
+  default     = 0
+}
+
+variable "mgn_copy_private_ip" {
+  description = "Copy private IP from source server to target"
+  type        = bool
+  default     = false
+}
+
+variable "mgn_os_byol" {
+  description = "Bring Your Own License for OS"
+  type        = bool
+  default     = false
+}

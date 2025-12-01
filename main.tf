@@ -106,3 +106,71 @@ module "organizations" {
 
   tags = local.common_tags
 }
+
+# -----------------------------------------------------------------------------
+# Compute Module - Migrated Workloads from vCenter
+# -----------------------------------------------------------------------------
+module "compute" {
+  source = "./modules/compute"
+
+  count = var.enable_compute ? 1 : 0
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.networking.vpc_id
+  private_subnet_ids = module.networking.private_subnet_ids
+  public_subnet_ids  = module.networking.public_subnet_ids
+
+  # ALB Security Group from security module
+  alb_security_group_ids = [module.security.alb_security_group_id]
+  instance_profile_name  = module.iam.ec2_instance_profile_name
+
+  # Migrated workload configuration
+  web_server_count = var.web_server_count
+  app_server_count = var.app_server_count
+  create_alb       = var.create_alb
+
+  # vCenter source mapping
+  vcenter_source_vms = var.vcenter_source_vms
+
+  tags = local.common_tags
+
+  depends_on = [module.networking, module.security, module.iam]
+}
+
+# -----------------------------------------------------------------------------
+# AWS MGN Module - Application Migration Service (Lift-and-Shift)
+# -----------------------------------------------------------------------------
+module "mgn" {
+  source = "./modules/mgn"
+
+  count = var.enable_mgn ? 1 : 0
+
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_id       = module.networking.vpc_id
+
+  # Staging area for replication
+  staging_subnet_id = module.networking.private_subnet_ids[0]
+  target_subnet_ids = module.networking.private_subnet_ids
+
+  # Security Groups
+  replication_security_group_ids = []  # Will use created SG
+  bastion_security_group_ids     = [module.security.bastion_security_group_id]
+  alb_security_group_ids         = [module.security.alb_security_group_id]
+
+  # Source vCenter network
+  source_cidr_blocks = var.vcenter_cidr_blocks
+
+  # Replication settings
+  replication_server_instance_type = var.mgn_replication_instance_type
+  bandwidth_throttling             = var.mgn_bandwidth_throttling
+
+  # Launch settings
+  copy_private_ip = var.mgn_copy_private_ip
+  os_byol         = var.mgn_os_byol
+
+  tags = local.common_tags
+
+  depends_on = [module.networking, module.security]
+}

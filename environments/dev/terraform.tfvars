@@ -36,25 +36,55 @@ allowed_regions      = ["ap-southeast-1", "ap-southeast-2"]  # Allowed regions
 
 # Account Factory (example - customize as needed)
 account_factory_enabled = false
-# accounts = {
-#   "log-archive" = {
-#     email = "log-archive@example.com"
-#     ou    = "security"
-#   }
-#   "audit" = {
-#     email = "audit@example.com"
-#     ou    = "security"
-#   }
-#   "shared-services" = {
-#     email = "shared@example.com"
-#     ou    = "infrastructure"
-#   }
-#   "workload-prod" = {
-#     email = "prod@example.com"
-#     ou    = "production"
-#   }
-#   "workload-dev" = {
-#     email = "dev@example.com"
-#     ou    = "non_production"
-#   }
-# }
+
+# =============================================================================
+# Compute - Migrated Workloads from vCenter (AWS MGN)
+# =============================================================================
+enable_compute   = true   # Enable to deploy migrated workloads
+web_server_count = 2      # PROD-WEB-01, PROD-WEB-02
+app_server_count = 2      # PROD-APP-01, PROD-APP-02
+create_alb       = true   # Application Load Balancer for web tier
+
+# vCenter Source VMs (for migration tracking tags)
+vcenter_source_vms = [
+  {
+    name       = "PROD-WEB-01"
+    datacenter = "DC-HCM"
+    cluster    = "Cluster-Prod"
+    ip_address = "192.168.1.10"
+  },
+  {
+    name       = "PROD-WEB-02"
+    datacenter = "DC-HCM"
+    cluster    = "Cluster-Prod"
+    ip_address = "192.168.1.11"
+  },
+  {
+    name       = "PROD-APP-01"
+    datacenter = "DC-HCM"
+    cluster    = "Cluster-Prod"
+    ip_address = "192.168.1.20"
+  },
+  {
+    name       = "PROD-APP-02"
+    datacenter = "DC-HCM"
+    cluster    = "Cluster-Prod"
+    ip_address = "192.168.1.21"
+  }
+]
+
+# =============================================================================
+# AWS MGN - Application Migration Service (Lift-and-Shift)
+# =============================================================================
+enable_mgn = true  # Enable AWS MGN for lift-and-shift migration
+
+# vCenter network CIDR (source servers)
+vcenter_cidr_blocks = ["192.168.1.0/24"]  # DC-HCM network
+
+# MGN Replication Settings
+mgn_replication_instance_type = "t3.small"
+mgn_bandwidth_throttling      = 0  # Unlimited
+
+# MGN Launch Settings
+mgn_copy_private_ip = false  # Don't copy private IP (use AWS DHCP)
+mgn_os_byol         = false  # Use AWS provided license
